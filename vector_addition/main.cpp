@@ -1,6 +1,7 @@
 #include<iostream>
 #define CL_TARGET_OPENCL_VERSION 200
 #include<CL/cl.hpp>
+#include"util.h"
 
 const int platform_id = 0;
 const int device_id = 0;
@@ -9,12 +10,6 @@ const int n = 4;
 const double eps = 1e-6;
 const bool print_cl = false;
 
-const std::string kernel_str = R""""(
-__kernel void vector_add(__global double *c, __global const double *a, __global const double *b) {
-    int i = get_global_id(0);
-    c[i] = a[i] + b[i];
-}
-)"""";
 
 int main() {
     // list all platforms and devices
@@ -66,7 +61,7 @@ int main() {
     cl::Program::Sources source_list;
 
     // load kernel
-    // std::string kernel_str = read("kernel.cl");
+    std::string kernel_str = util::read("kernel.cl");	
     source_list.push_back({kernel_str.c_str(), kernel_str.length()});
 
     // build kernel
@@ -101,9 +96,10 @@ int main() {
     // (2) enqueue kernel
     cl::Event kernel_event;
     cl::Kernel kernel(program, "vector_add");
-    kernel.setArg(0, c_buf);
-    kernel.setArg(1, a_buf);
-    kernel.setArg(2, b_buf);
+    kernel.setArg(0, n);
+    kernel.setArg(1, c_buf);
+    kernel.setArg(2, a_buf);
+    kernel.setArg(3, b_buf);
     cl::NDRange global_size(n);
     cl::NDRange local_size = cl::NullRange;
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global_size, local_size, nullptr, &kernel_event);
