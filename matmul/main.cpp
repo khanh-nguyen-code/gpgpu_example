@@ -3,7 +3,7 @@
 #include<CL/cl.hpp>
 #include"util.h"
 
-const int platform_id = 0;
+const int platform_id = 1;
 const int device_id = 0;
 
 const double eps = 1e-6;
@@ -60,9 +60,9 @@ int main() {
     cl::Kernel kernel(program, "matmul");
 
     // make dummy data
-    const int d0 = 300;
-    const int d1 = 400;
-    const int d2 = 500;
+    const int d0 = 3000;
+    const int d1 = 4000;
+    const int d2 = 5000;
     double* a = (double*) std::malloc(d0*d1 * sizeof(double));
     double* b = (double*) std::malloc(d1*d2 * sizeof(double));
     double* c = (double*) std::malloc(d0*d2 * sizeof(double));
@@ -73,7 +73,7 @@ int main() {
         b[i] = (double) i;
     }
     // make queue
-    cl::CommandQueue queue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
+    cl::CommandQueue queue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE);
 
     // make device buffer
     cl::Buffer a_buf(context, CL_MEM_READ_ONLY, d0*d1 * sizeof(double));
@@ -103,6 +103,19 @@ int main() {
     // finish
     queue.finish();
     
+    cl_int err;
+    auto t0 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&err);
+    if (err != CL_SUCCESS) {
+        std::cerr << "profile error" << std::endl;
+        std::exit(1);
+    }
+    auto t1 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&err);
+    if (err != CL_SUCCESS) {
+        std::cerr << "profile error" << std::endl;
+        std::exit(1);
+    }
+    std::cout << "kernel time: " << t1-t0 << "ns" << std::endl;
+
     // output
     double* d = (double*) std::malloc(d0*d2 * sizeof(double));
     matmul(d, a, b, d0, d1, d2);
