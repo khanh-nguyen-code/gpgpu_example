@@ -2,6 +2,7 @@
 #define CL_TARGET_OPENCL_VERSION 200
 #include<CL/cl.hpp>
 #include"util.h"
+#include"high_precision_timer.h"
 
 const int platform_id = 0;
 const int device_id = 0;
@@ -11,15 +12,23 @@ cl_int err;
 
 
 void matmul(double *c, const double *a, const double *b, const int d0, const int d1, const int d2) {
-    for (int i=0; i<d0; i++) {
-        for (int j=0; j<d2; j++) {
-            c[i * d2 + j] = 0.0;
+    {
+        int i, j;
+        #pragma omp parallel for shared(c) private(i, j)
+        for (i=0; i<d0; i++) {
+            for (j=0; j<d2; j++) {
+                c[i * d2 + j] = 0.0;
+            }
         }
     }
-    for (int i=0; i<d0; i++) {
-        for (int j=0; j<d2; j++) {
-            for (int k=0; k<d1; k++) {
-                c[i * d2 + j] += a[i * d1 + k] * b[k * d2 + j];
+    {
+        int i, j, k;
+        #pragma omp parallel for shared(a, b, c) private(i, j, k)
+        for (i=0; i<d0; i++) {
+            for (j=0; j<d2; j++) {
+                for (k=0; k<d1; k++) {
+                    c[i * d2 + j] += a[i * d1 + k] * b[k * d2 + j];
+                }
             }
         }
     }
@@ -93,6 +102,7 @@ int main() {
         std::exit(1);
     }
 
+    auto t0 = timer::now();
     // enqueue
     // (1) enqueue write data to device buffer
     std::vector<cl::Event> write_event_list(2);
@@ -127,22 +137,27 @@ int main() {
     }
     // finish
     err = queue.finish();
+    auto t1 = timer::now();
     
-    auto t0 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&err);
+    auto t2 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&err);
     if (err != CL_SUCCESS) {
         std::cerr << "profile error" << std::endl;
         std::exit(1);
     }
-    auto t1 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&err);
+    auto t3 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&err);
     if (err != CL_SUCCESS) {
         std::cerr << "profile error" << std::endl;
         std::exit(1);
     }
-    std::cout << "kernel time: " << t1-t0 << "ns" << std::endl;
+    std::cout << "kernel time:\t" << t3-t2 << "ns" << std::endl;
+    std::cout << "total time:\t" << t1-t0 << "ns" << std::endl;
 
     // output
     double* d = (double*) std::malloc(d0*d2 * sizeof(double));
+    auto t4 = timer::now();
     matmul(d, a, b, d0, d1, d2);
+    auto t5 = timer::now();
+    std::cout << "omp time:\t" << t5-t4 << "ns" << std::endl;
     for (int i=0; i<d0*d2; i++) {
         double diff = c[i] - d[i];
         diff = (diff >= 0) ? diff : -diff;
