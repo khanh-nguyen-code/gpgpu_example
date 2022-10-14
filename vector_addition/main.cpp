@@ -6,7 +6,7 @@
 const int platform_id = 0;
 const int device_id = 0;
 
-const int n = 4;
+const int n = 1024;
 const double eps = 1e-6;
 
 
