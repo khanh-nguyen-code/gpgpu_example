@@ -2,13 +2,13 @@
 
 ## INSTALLATION
 
-- PoCL - Portable Computing Language
+- PoCL - Portable Computing Language - open source implementation on CPU
 
 ```commandline
 sudo dnf install pocl
 ```
 
-- AMD Rocm
+- Rocm - AMD implementation
 
 ```commandline
 sudo dnf install rocmclinfo rocm-*
