@@ -9,16 +9,6 @@ const int device_id = 0;
 const double eps = 1e-6;
 
 
-void print(const double *a, const int m, const int n) {
-    for (int i=0; i<m; i++) {
-        for (int j=0; j<n; j++) {
-            std::cout << a[i * n + j] << "\t";
-        }
-        std::cout << "\n";
-    }
-    std::cout << std::endl;
-}
-
 void matmul(double *c, const double *a, const double *b, const int d0, const int d1, const int d2) {
     for (int i=0; i<d0; i++) {
         for (int j=0; j<d2; j++) {
@@ -70,9 +60,9 @@ int main() {
     cl::Kernel kernel(program, "matmul");
 
     // make dummy data
-    const int d0 = 3;
-    const int d1 = 4;
-    const int d2 = 5;
+    const int d0 = 30;
+    const int d1 = 40;
+    const int d2 = 50;
     double* a = (double*) std::malloc(d0*d1 * sizeof(double));
     double* b = (double*) std::malloc(d1*d2 * sizeof(double));
     double* c = (double*) std::malloc(d0*d2 * sizeof(double));
@@ -115,11 +105,16 @@ int main() {
     
     // output
     double* d = (double*) std::malloc(d0*d2 * sizeof(double));
-    print(a, d0, d1);
-    print(b, d1, d2);
-    print(c, d0, d2);
     matmul(d, a, b, d0, d1, d2);
-    print(d, d0, d2);
+    for (int i=0; i<d0*d2; i++) {
+        double diff = c[i] - d[i];
+        diff = (diff >= 0) ? diff : -diff;
+        if (diff > eps) {
+            std::cerr << "wrong result " << i << " "<< c[i] << " "<< d[i] << std::endl;
+            std::exit(1);
+        }
+    }
+    std::cout << "result ok" << std::endl;
 
     // free
     std::free(a);

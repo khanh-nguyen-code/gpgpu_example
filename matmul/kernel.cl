@@ -8,19 +8,13 @@ __kernel void matmul(__global double *c, __global const double *a, __global doub
     // calculate
     tmp[k] = a[i * k_d + k] * b[k * j_d + j];
     barrier(CLK_LOCAL_MEM_FENCE);
-    // reduce sum
-    int work_size = k_d;
-    while (work_size > 1) {
-        int step_size = (work_size + 1) / 2;
-        if (k < step_size) {
-            int k2 = k + step_size;
-            if (k2 < work_size) {
-                tmp[k] = tmp[k] + tmp[k2];
-            }
+    if (k == 0) {
+        // reduce sum
+        double sum = 0.0;
+        for (int k=0; k<k_d; k++) {
+            sum += tmp[k];
         }
-        work_size = step_size;
-        barrier(CLK_LOCAL_MEM_FENCE);
+        // write
+        c[i * j_d + j] = sum;
     }
-    // write
-    c[i * j_d + j] = tmp[0];
 }
