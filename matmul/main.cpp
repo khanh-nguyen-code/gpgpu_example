@@ -3,10 +3,11 @@
 #include<CL/cl.hpp>
 #include"util.h"
 
-const int platform_id = 1;
+const int platform_id = 0;
 const int device_id = 0;
 
 const double eps = 1e-6;
+cl_int err;
 
 
 void matmul(double *c, const double *a, const double *b, const int d0, const int d1, const int d2) {
@@ -60,9 +61,9 @@ int main() {
     cl::Kernel kernel(program, "matmul");
 
     // make dummy data
-    const int d0 = 3000;
-    const int d1 = 4000;
-    const int d2 = 5000;
+    const int d0 = 30;
+    const int d1 = 40;
+    const int d2 = 50;
     double* a = (double*) std::malloc(d0*d1 * sizeof(double));
     double* b = (double*) std::malloc(d1*d2 * sizeof(double));
     double* c = (double*) std::malloc(d0*d2 * sizeof(double));
@@ -76,16 +77,32 @@ int main() {
     cl::CommandQueue queue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE);
 
     // make device buffer
-    cl::Buffer a_buf(context, CL_MEM_READ_ONLY, d0*d1 * sizeof(double));
-    cl::Buffer b_buf(context, CL_MEM_READ_ONLY, d1*d2 * sizeof(double));
-    cl::Buffer c_buf(context, CL_MEM_WRITE_ONLY, d0*d2 * sizeof(double));
+    cl::Buffer a_buf(context, CL_MEM_READ_ONLY, d0*d1 * sizeof(double), nullptr, &err);
+    if (err != CL_SUCCESS) {
+        std::cerr << "malloc error" << std::endl;
+        std::exit(1);
+    }
+    cl::Buffer b_buf(context, CL_MEM_READ_ONLY, d1*d2 * sizeof(double), nullptr, &err);
+    if (err != CL_SUCCESS) {
+        std::cerr << "malloc error" << std::endl;
+        std::exit(1);
+    }
+    cl::Buffer c_buf(context, CL_MEM_WRITE_ONLY, d0*d2 * sizeof(double), nullptr, &err);
+    if (err != CL_SUCCESS) {
+        std::cerr << "malloc error" << std::endl;
+        std::exit(1);
+    }
 
     // enqueue
     // (1) enqueue write data to device buffer
     std::vector<cl::Event> write_event_list(2);
     queue.enqueueWriteBuffer(a_buf, CL_FALSE, 0, d0*d1 * sizeof(double), a, nullptr, &write_event_list[0]);
     queue.enqueueWriteBuffer(b_buf, CL_FALSE, 0, d1*d2 * sizeof(double), b, nullptr, &write_event_list[1]);
-    queue.enqueueBarrierWithWaitList(&write_event_list, nullptr);
+    err = queue.enqueueBarrierWithWaitList(&write_event_list, nullptr);
+    if (err != CL_SUCCESS) {
+        std::cerr << "barrier error" << std::endl;
+        std::exit(1);
+    }
     // (2) enqueue kernel
     cl::Event kernel_event;
     kernel.setArg(0, c_buf);
@@ -95,15 +112,22 @@ int main() {
     cl::NDRange global_size(d0, d1, d2);
     cl::NDRange local_size(1, d1, 1);
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global_size, local_size, nullptr, &kernel_event);
-    queue.enqueueBarrierWithWaitList(nullptr, &kernel_event);
+    err = queue.enqueueBarrierWithWaitList(nullptr, &kernel_event);
+    if (err != CL_SUCCESS) {
+        std::cerr << "barrier error" << std::endl;
+        std::exit(1);
+    }
     // (3) enqueue read data from device_buffer
     cl::Event read_event;
     queue.enqueueReadBuffer(c_buf, CL_FALSE, 0, d0*d2 * sizeof(double), c, nullptr, &read_event);
-    queue.enqueueBarrierWithWaitList(nullptr, &read_event);
+    err = queue.enqueueBarrierWithWaitList(nullptr, &read_event);
+    if (err != CL_SUCCESS) {
+        std::cerr << "barrier error" << std::endl;
+        std::exit(1);
+    }
     // finish
-    queue.finish();
+    err = queue.finish();
     
-    cl_int err;
     auto t0 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&err);
     if (err != CL_SUCCESS) {
         std::cerr << "profile error" << std::endl;
