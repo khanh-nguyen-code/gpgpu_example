@@ -22,7 +22,7 @@ void matmul(double *c, const double *a, const double *b, const int d0, const int
     }
     {
         int i, j, k;
-        #pragma omp parallel for shared(a, b, c) private(i, j, k)
+        #pragma omp parallel for shared(c) private(i, j, k)
         for (i=0; i<d0; i++) {
             for (j=0; j<d2; j++) {
                 for (k=0; k<d1; k++) {
