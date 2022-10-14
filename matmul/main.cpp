@@ -2,7 +2,6 @@
 #define CL_TARGET_OPENCL_VERSION 200
 #include<CL/cl.hpp>
 #include"util.h"
-#include"high_precision_timer.h"
 
 const int platform_id = 0;
 const int device_id = 0;
@@ -83,7 +82,7 @@ int main() {
         b[i] = (double) i;
     }
     // make queue
-    cl::CommandQueue queue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE | CL_QUEUE_PROFILING_ENABLE);
+    cl::CommandQueue queue(context, device, CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE);
 
     // make device buffer
     cl::Buffer a_buf(context, CL_MEM_READ_ONLY, d0*d1 * sizeof(double), nullptr, &err);
@@ -102,7 +101,6 @@ int main() {
         std::exit(1);
     }
 
-    auto t0 = timer::now();
     // enqueue
     // (1) enqueue write data to device buffer
     std::vector<cl::Event> write_event_list(2);
@@ -115,12 +113,12 @@ int main() {
     }
     // (2) enqueue kernel
     cl::Event kernel_event;
-    kernel.setArg(0, c_buf);
-    kernel.setArg(1, a_buf);
-    kernel.setArg(2, b_buf);
-    kernel.setArg(3, cl::Local(d1 * sizeof(double)));
-    cl::NDRange global_size(d0, d1, d2);
-    cl::NDRange local_size(1, d1, 1);
+    kernel.setArg(0, d1);
+    kernel.setArg(1, c_buf);
+    kernel.setArg(2, a_buf);
+    kernel.setArg(3, b_buf);
+    cl::NDRange global_size(d0, d2);
+    cl::NDRange local_size = cl::NullRange;
     queue.enqueueNDRangeKernel(kernel, cl::NullRange, global_size, local_size, nullptr, &kernel_event);
     err = queue.enqueueBarrierWithWaitList(nullptr, &kernel_event);
     if (err != CL_SUCCESS) {
@@ -137,27 +135,10 @@ int main() {
     }
     // finish
     err = queue.finish();
-    auto t1 = timer::now();
     
-    auto t2 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_START>(&err);
-    if (err != CL_SUCCESS) {
-        std::cerr << "profile error" << std::endl;
-        std::exit(1);
-    }
-    auto t3 = kernel_event.getProfilingInfo<CL_PROFILING_COMMAND_END>(&err);
-    if (err != CL_SUCCESS) {
-        std::cerr << "profile error" << std::endl;
-        std::exit(1);
-    }
-    std::cout << "kernel time:\t" << t3-t2 << "ns" << std::endl;
-    std::cout << "total time:\t" << t1-t0 << "ns" << std::endl;
-
     // output
     double* d = (double*) std::malloc(d0*d2 * sizeof(double));
-    auto t4 = timer::now();
     matmul(d, a, b, d0, d1, d2);
-    auto t5 = timer::now();
-    std::cout << "omp time:\t" << t5-t4 << "ns" << std::endl;
     for (int i=0; i<d0*d2; i++) {
         double diff = c[i] - d[i];
         diff = (diff >= 0) ? diff : -diff;
