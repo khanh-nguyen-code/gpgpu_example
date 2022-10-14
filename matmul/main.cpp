@@ -67,6 +67,7 @@ int main() {
         std::cerr << "build error: " << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device) << std::endl;
         std::exit(1);
     }
+    cl::Kernel kernel(program, "matmul");
 
     // make dummy data
     const int d0 = 3;
@@ -97,7 +98,6 @@ int main() {
     queue.enqueueBarrierWithWaitList(&write_event_list, nullptr);
     // (2) enqueue kernel
     cl::Event kernel_event;
-    cl::Kernel kernel(program, "matmul");
     kernel.setArg(0, c_buf);
     kernel.setArg(1, a_buf);
     kernel.setArg(2, b_buf);
