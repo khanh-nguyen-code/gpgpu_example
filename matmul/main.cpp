@@ -1,6 +1,7 @@
 #include<iostream>
 #define CL_TARGET_OPENCL_VERSION 200
 #include<CL/cl.hpp>
+#include<openblas/cblas.h>
 #include"util.h"
 
 const int platform_id = 0;
@@ -9,19 +10,19 @@ const int device_id = 0;
 const double eps = 1e-6;
 cl_int err;
 
-
-void matmul(double *c, const double *a, const double *b, const int d0, const int d1, const int d2) {
-    int i, j, k;
-    #pragma omp parallel for shared(c) private(i, j, k)
-    for (i=0; i<d0; i++) {
-        for (j=0; j<d2; j++) {
-            double acc = 0.0;
-            for (k=0; k<d1; k++) {
-                acc += a[i * d1 + k] * b[k * d2 + j];
-            }
-            c[i * d2 + j] += acc;
-        }
-    }
+void matmul_blas(double *c, const double *a, const double *b, const int d0, const int d1, const int d2) {
+    // c <- alpha a b + beta c
+    const double alpha = 1.0;
+    const double beta = 0.0;
+    cblas_dgemm(
+        CblasRowMajor, CblasNoTrans, CblasNoTrans,
+        d0, d2, d1,
+        alpha,
+        a, d1,
+        b, d2,
+        beta,
+        c, d2
+    );
 }
 
 int main() {
@@ -129,7 +130,7 @@ int main() {
     
     // output
     double* d = (double*) std::malloc(d0*d2 * sizeof(double));
-    matmul(d, a, b, d0, d1, d2);
+    matmul_blas(d, a, b, d0, d1, d2);
     for (int i=0; i<d0*d2; i++) {
         double diff = c[i] - d[i];
         diff = (diff >= 0) ? diff : -diff;
