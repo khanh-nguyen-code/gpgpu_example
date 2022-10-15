@@ -61,9 +61,9 @@ int main() {
     cl::Kernel kernel(program, "matmul");
 
     // make dummy data
-    const int d0 = 3000;
-    const int d1 = 4000;
-    const int d2 = 5000;
+    const int d0 = 30;
+    const int d1 = 40;
+    const int d2 = 50;
     double* a = (double*) std::malloc(d0*d1 * sizeof(double));
     double* b = (double*) std::malloc(d1*d2 * sizeof(double));
     double* c = (double*) std::malloc(d0*d2 * sizeof(double));
