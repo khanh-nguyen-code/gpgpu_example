@@ -45,69 +45,36 @@ int main() {
 
     cl_device_id device = cl_util::get_device(platform_id, device_id);
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &code);
-    if (code != CL_SUCCESS) {
-        std::printf("create_context: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("create_context", code);
     cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, nullptr, &code);
-    if (code != CL_SUCCESS) {
-        std::printf("create_command_queue_with_properties: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("create_command_queue_with_properties", code);
     
     const std::string source(reinterpret_cast<char*>(&kernel_cl[0]), kernel_cl_len);
     cl_kernel kernel = cl_util::create_kernel(context, source, "vector_add");
 
     cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(double), nullptr, &code);
-    if (code != CL_SUCCESS) {
-        std::printf("create_buffer_with_properties: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("create_buffer_with_properties", code);
     cl_mem b_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, b.size() * sizeof(double), nullptr, &code);
-    if (code != CL_SUCCESS) {
-        std::printf("create_buffer_with_properties: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("create_buffer_with_properties", code);
     cl_mem c_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, c.size() * sizeof(double), nullptr, &code);
-    if (code != CL_SUCCESS) {
-        std::printf("create_buffer_with_properties: %d\n", code);
-        std::exit(1);
-    }
-
+    cl_util::assert("create_buffer_with_properties", code);
+    
     // queue
     std::vector<cl_event> write_event(2);
     code = clEnqueueWriteBuffer(queue, a_buf, CL_NON_BLOCKING, 0, a.size() * sizeof(double), a.data(), 0, nullptr, &write_event[0]);
-    if (code != CL_SUCCESS) {
-        std::printf("enqueue_write_buffer: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("enqueue_write_buffer", code);
     code = clEnqueueWriteBuffer(queue, b_buf, CL_NON_BLOCKING, 0, b.size() * sizeof(double), b.data(), 0, nullptr, &write_event[1]);
-    if (code != CL_SUCCESS) {
-        std::printf("enqueue_write_buffer: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("enqueue_write_buffer", code);
 
     cl_event kernel_event;
     code = clSetKernelArg(kernel, 0, sizeof(int), &n);
-    if (code != CL_SUCCESS) {
-        std::printf("set_kernel_arg: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("set_kernel_arg", code);
     code = clSetKernelArg(kernel, 1, sizeof(cl_mem), &c_buf);
-    if (code != CL_SUCCESS) {
-        std::printf("set_kernel_arg: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("set_kernel_arg", code);
     code = clSetKernelArg(kernel, 2, sizeof(cl_mem), &a_buf);
-    if (code != CL_SUCCESS) {
-        std::printf("set_kernel_arg: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("set_kernel_arg", code);
     code = clSetKernelArg(kernel, 3, sizeof(cl_mem), &b_buf);
-    if (code != CL_SUCCESS) {
-        std::printf("set_kernel_arg: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("set_kernel_arg", code);
 
     std::vector<size_t> global_work_size = {n};
     std::vector<size_t> local_work_size = {1};
@@ -121,24 +88,16 @@ int main() {
         global_work_size.data(), local_work_size.data(),
         write_event.size(), write_event.data(), &kernel_event
     );
-    if (code != CL_SUCCESS) {
-        std::printf("enqueue_ndrange_kernel: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("enqueue_ndrange_kernel", code);
 
 
     cl_event read_event;
     code = clEnqueueReadBuffer(queue, c_buf, CL_NON_BLOCKING, 0, c.size() * sizeof(double), c.data(), 1, &kernel_event, &read_event);
-    if (code != CL_SUCCESS) {
-        std::printf("enqueue_read_buffer: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("enqueue_read_buffer", code);
 
     code = clWaitForEvents(1, &read_event);
-    if (code != CL_SUCCESS) {
-        std::printf("wait_for_events: %d\n", code);
-        std::exit(1);
-    }
+    cl_util::assert("wait_for_events", code);
+
     clFinish(queue);
     for (auto& event: write_event) {
         clReleaseEvent(event);
