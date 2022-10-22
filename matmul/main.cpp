@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<omp.h>
 #include"util.h"
 
 #define CL_TARGET_OPENCL_VERSION 200
@@ -18,7 +19,10 @@ const int k = 1024;
 const double eps = 1e-6;
 
 
-void matmul_clblast(cl_command_queue* queue, cl_mem c, cl_mem a, cl_mem b, int m, int n, int k, cl_event* event) {
+void matmul_clblast(
+    cl_mem c, cl_mem a, cl_mem b, int m, int n, int k,
+    cl_command_queue* queue, cl_event* event
+) {
     // c <- alpha A B + beta C
     double alpha = 1.0;
     double beta = 0.0;
@@ -53,8 +57,10 @@ bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
 }
 
 void matmul(double* c, const double *a, const double* b, int m, int n, int k) {
-    for (int m_i=0; m_i < m; m_i++)
-    for (int n_i=0; n_i < n; n_i++) {
+    int m_i, n_i;
+    # pragma omp parallel for shared(a, b, c) private(m_i, n_i) collapse(2)
+    for (m_i=0; m_i < m; m_i++)
+    for (n_i=0; n_i < n; n_i++) {
         double acc = 0;
         for (int k_i=0; k_i < k; k_i++) {
             acc += a[m_i * k + k_i] * b[k_i * n + n_i];
@@ -111,8 +117,14 @@ int main() {
         std::exit(1);
     }
 
+    code = clEnqueueBarrierWithWaitList(queue, write_event.size(), write_event.data(), nullptr);
+    if (code != CL_SUCCESS) {
+        std::printf("enqueue_barrier_with_wait_list: %d\n", code);
+        std::exit(1);
+    }
+
     cl_event kernel_event;
-    matmul_clblast(&queue, c_buf, a_buf, b_buf, m, n, k, &kernel_event);
+    matmul_clblast(c_buf, a_buf, b_buf, m, n, k, &queue, &kernel_event);
 
     cl_event read_event;
     code = clEnqueueReadBuffer(queue, c_buf, CL_NON_BLOCKING, 0, c.size() * sizeof(double), c.data(), 1, &kernel_event, &read_event);
