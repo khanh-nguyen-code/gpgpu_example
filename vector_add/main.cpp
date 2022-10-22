@@ -29,7 +29,9 @@ bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
         return false;
     }
     for (int i=0; i<a.size(); i++) {
-        if (a[i] != b[i]) {
+        double diff = a[i] - b[i];
+        diff = (diff >= 0) ? diff : -diff;
+        if (diff > eps) {
             return false;
         }
     }
@@ -57,18 +59,17 @@ int main() {
     const std::string source(reinterpret_cast<char*>(&kernel_cl[0]), kernel_cl_len);
     cl_kernel kernel = cl_util::create_kernel(context, source, "vector_add");
 
-    const size_t size = n * sizeof(double);
-    cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, size, nullptr, &code);
+    cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(double), nullptr, &code);
     if (code != CL_SUCCESS) {
         std::printf("create_buffer_with_properties: %d\n", code);
         std::exit(1);
     }
-    cl_mem b_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, size, nullptr, &code);
+    cl_mem b_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, b.size() * sizeof(double), nullptr, &code);
     if (code != CL_SUCCESS) {
         std::printf("create_buffer_with_properties: %d\n", code);
         std::exit(1);
     }
-    cl_mem c_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size, nullptr, &code);
+    cl_mem c_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, c.size() * sizeof(double), nullptr, &code);
     if (code != CL_SUCCESS) {
         std::printf("create_buffer_with_properties: %d\n", code);
         std::exit(1);
@@ -76,12 +77,12 @@ int main() {
 
     // queue
     std::vector<cl_event> write_event(2);
-    code = clEnqueueWriteBuffer(queue, a_buf, CL_NON_BLOCKING, 0, size, a.data(), 0, nullptr, &write_event[0]);
+    code = clEnqueueWriteBuffer(queue, a_buf, CL_NON_BLOCKING, 0, a.size() * sizeof(double), a.data(), 0, nullptr, &write_event[0]);
     if (code != CL_SUCCESS) {
         std::printf("enqueue_write_buffer: %d\n", code);
         std::exit(1);
     }
-    code = clEnqueueWriteBuffer(queue, b_buf, CL_NON_BLOCKING, 0, size, b.data(), 0, nullptr, &write_event[1]);
+    code = clEnqueueWriteBuffer(queue, b_buf, CL_NON_BLOCKING, 0, b.size() * sizeof(double), b.data(), 0, nullptr, &write_event[1]);
     if (code != CL_SUCCESS) {
         std::printf("enqueue_write_buffer: %d\n", code);
         std::exit(1);
@@ -128,7 +129,7 @@ int main() {
 
 
     cl_event read_event;
-    code = clEnqueueReadBuffer(queue, c_buf, CL_NON_BLOCKING, 0, size, c.data(), 1, &kernel_event, &read_event);
+    code = clEnqueueReadBuffer(queue, c_buf, CL_NON_BLOCKING, 0, c.size() * sizeof(double), c.data(), 1, &kernel_event, &read_event);
     if (code != CL_SUCCESS) {
         std::printf("enqueue_read_buffer: %d\n", code);
         std::exit(1);
