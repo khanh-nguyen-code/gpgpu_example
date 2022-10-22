@@ -11,7 +11,6 @@ const int device_id = 0;
 
 
 cl_int code;
-const cl_uint MAX_SIZE = 256;
 // (m x k) (k x n) -> (m x n)
 const int m = 1024;
 const int n = 1024;

@@ -10,7 +10,6 @@ const int device_id = 0;
 
 
 cl_int code;
-const cl_uint MAX_SIZE = 256;
 const int n = 1024;
 const double eps = 1e-6;
 
