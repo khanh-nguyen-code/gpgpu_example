@@ -140,6 +140,12 @@ int main() {
         std::printf("wait_for_events: %d\n", code);
         std::exit(1);
     }
+    clFinish(queue);
+    for (auto& event: write_event) {
+        clReleaseEvent(event);
+    }
+    clReleaseEvent(kernel_event);
+    clReleaseEvent(read_event); 
     // compare
     std::vector<double> c_host = vector_add(a, b);
     if (vector_cmp(c, c_host)) {

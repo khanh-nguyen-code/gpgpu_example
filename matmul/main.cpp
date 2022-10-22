@@ -26,7 +26,7 @@ void matmul_clblast(
     // c <- alpha A B + beta C
     double alpha = 1.0;
     double beta = 0.0;
-    auto code = clblast::Gemm<double>(
+    clblast::StatusCode code = clblast::Gemm<double>(
         clblast::Layout::kRowMajor, clblast::Transpose::kNo, clblast::Transpose::kNo,
         m, n, k, 
         alpha,
@@ -138,6 +138,12 @@ int main() {
         std::printf("wait_for_events: %d\n", code);
         std::exit(1);
     }
+    clFinish(queue);
+    for (auto& event: write_event) {
+        clReleaseEvent(event);
+    }
+    clReleaseEvent(kernel_event);
+    clReleaseEvent(read_event); 
     // compare
     std::vector<double> c_host(c.size());
     matmul(c_host.data(), a.data(), b.data(), m, n, k);
