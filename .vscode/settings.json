@@ -33,6 +33,7 @@
         "utility": "cpp",
         "sstream": "cpp",
         "fstream": "cpp",
-        "ctime": "cpp"
+        "ctime": "cpp",
+        "test": "c"
     }
 }
