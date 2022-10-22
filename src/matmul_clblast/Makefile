@@ -1,14 +1,14 @@
 bench: clean
 	g++ \
 		-std=c++17 -fPIC -O3 \
-		-I . -I ../include \
+		-I . -I ../../include \
 		-l OpenCL -l clblast -fopenmp\
 		bench.cpp -o bench.out
 	./bench.out
 run: clean
 	g++ \
 		-std=c++17 -fPIC -O3 \
-		-I . -I ../include \
+		-I . -I ../../include \
 		-l OpenCL -l clblast -fopenmp\
 		main.cpp -o main.out
 	./main.out
