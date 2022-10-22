@@ -14,45 +14,6 @@ const cl_uint MAX_SIZE = 256;
 const int n = 1024;
 const double eps = 1e-6;
 
-cl_device_id get_device(int platform_id, int device_id) {
-    std::vector<cl_platform_id> platform_list = cl_util::read_list<cl_platform_id>([&](cl_uint size, cl_platform_id* buffer, cl_uint* size_ret) -> cl_int {
-        return clGetPlatformIDs(size, buffer, size_ret);
-    }, platform_id+1, "get_platform_ids");
-    cl_platform_id platform = platform_list[platform_id];
-
-    std::string platform_name = cl_util::read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
-        return clGetPlatformInfo(platform, CL_PLATFORM_NAME, size, buffer, size_ret);
-    }, MAX_SIZE, "get_platform_name");
-    std::string platform_vendor = cl_util::read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
-        return clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, size, buffer, size_ret);
-    }, MAX_SIZE, "get_platform_vendor");
-    std::string platform_version = cl_util::read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
-        return clGetPlatformInfo(platform, CL_PLATFORM_VERSION, size, buffer, size_ret);
-    }, MAX_SIZE, "get_platform_version");
-
-    std::printf("choosing platform: %s (%s) %s\n", platform_name.c_str(), platform_vendor.c_str(), platform_version.c_str());
-    
-
-    std::vector<cl_device_id> device_list = cl_util::read_list<cl_device_id>([&](cl_uint size, cl_device_id* buffer, cl_uint* size_ret) {
-        return clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, size, buffer, size_ret);
-    }, device_id+1, "get_device_ids");
-    
-    cl_device_id device = device_list[device_id];
-    std::string device_name = cl_util::read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
-        return clGetDeviceInfo(device, CL_DEVICE_NAME, size, buffer, size_ret);
-    }, MAX_SIZE, "get_device_name");
-    std::string device_vendor = cl_util::read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
-        return clGetDeviceInfo(device, CL_DEVICE_VENDOR, size, buffer, size_ret);
-    }, MAX_SIZE, "get_device_vendor");
-    std::string device_version = cl_util::read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
-        return clGetDeviceInfo(device, CL_DEVICE_VERSION, size, buffer, size_ret);
-    }, MAX_SIZE, "get_device_version");
-    
-
-    std::printf("choosing device: %s (%s) %s\n", device_name.c_str(), device_vendor.c_str(), device_version.c_str());
-    return device_list[device_id];
-}
-
 std::vector<double> vector_add(const std::vector<double>& a, const std::vector<double>& b) {
     std::vector<double> c;
     for (int i=0;; i++) {
@@ -75,14 +36,13 @@ bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
     return true;
 }
 
-
 int main() {
     util::random_seed(1234);
     std::vector<double> a = util::random_normal(n);
     std::vector<double> b = util::random_normal(n);
     std::vector<double> c(n);
 
-    cl_device_id device = get_device(platform_id, device_id);
+    cl_device_id device = cl_util::get_device(platform_id, device_id);
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &code);
     if (code != CL_SUCCESS) {
         std::printf("create_context: %d\n", code);

@@ -7,14 +7,14 @@
 #include<string>
 
 namespace cl_util {
+const size_t BUFFER_SIZE = 1024;
 std::string read_string(
     const std::function<cl_int(size_t, char*, size_t*)>& reader,
-    const size_t max_size,
     const char* name = ""
 ) {
-    std::vector<char> buffer(max_size);
+    std::vector<char> buffer(BUFFER_SIZE);
     size_t size;
-    cl_int code = reader(max_size, buffer.data(), &size);
+    cl_int code = reader(BUFFER_SIZE, buffer.data(), &size);
     if (code != CL_SUCCESS) {
         std::printf("%s %d\n", name, code);
         std::exit(1);
@@ -27,12 +27,11 @@ std::string read_string(
 template<typename T>
 std::vector<T> read_list(
     const std::function<cl_int(cl_uint, T*, cl_uint*)>& reader,
-    const cl_uint max_size,
     const char* name = ""
 ) {
-    std::vector<T> buffer(max_size);
+    std::vector<T> buffer(BUFFER_SIZE);
     cl_uint size;
-    cl_int code = reader(max_size, buffer.data(), &size);
+    cl_int code = reader(BUFFER_SIZE, buffer.data(), &size);
     if (code != CL_SUCCESS) {
         std::printf("%s %d\n", name, code);
         std::exit(1);
@@ -63,6 +62,44 @@ cl_kernel create_kernel(cl_context context, std::string source, const char* name
         std::exit(1);
     }
     return kernel;
+}
+cl_device_id get_device(int platform_id, int device_id) {
+    std::vector<cl_platform_id> platform_list = read_list<cl_platform_id>([&](cl_uint size, cl_platform_id* buffer, cl_uint* size_ret) -> cl_int {
+        return clGetPlatformIDs(size, buffer, size_ret);
+    }, "get_platform_ids");
+    cl_platform_id platform = platform_list[platform_id];
+
+    std::string platform_name = read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
+        return clGetPlatformInfo(platform, CL_PLATFORM_NAME, size, buffer, size_ret);
+    }, "get_platform_name");
+    std::string platform_vendor = read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
+        return clGetPlatformInfo(platform, CL_PLATFORM_VENDOR, size, buffer, size_ret);
+    }, "get_platform_vendor");
+    std::string platform_version = read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
+        return clGetPlatformInfo(platform, CL_PLATFORM_VERSION, size, buffer, size_ret);
+    }, "get_platform_version");
+
+    std::printf("choosing platform: %s (%s) %s\n", platform_name.c_str(), platform_vendor.c_str(), platform_version.c_str());
+    
+
+    std::vector<cl_device_id> device_list = read_list<cl_device_id>([&](cl_uint size, cl_device_id* buffer, cl_uint* size_ret) {
+        return clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, size, buffer, size_ret);
+    }, "get_device_ids");
+    
+    cl_device_id device = device_list[device_id];
+    std::string device_name = read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
+        return clGetDeviceInfo(device, CL_DEVICE_NAME, size, buffer, size_ret);
+    }, "get_device_name");
+    std::string device_vendor = read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
+        return clGetDeviceInfo(device, CL_DEVICE_VENDOR, size, buffer, size_ret);
+    }, "get_device_vendor");
+    std::string device_version = read_string([&](size_t size, char* buffer, size_t* size_ret) -> cl_int {
+        return clGetDeviceInfo(device, CL_DEVICE_VERSION, size, buffer, size_ret);
+    }, "get_device_version");
+    
+
+    std::printf("choosing device: %s (%s) %s\n", device_name.c_str(), device_vendor.c_str(), device_version.c_str());
+    return device_list[device_id];
 }
 }
 #endif //__CL_UTIL__
