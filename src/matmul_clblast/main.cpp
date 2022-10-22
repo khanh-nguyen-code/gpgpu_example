@@ -42,13 +42,22 @@ void matmul_clblast(
 }
 
 bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
+    auto max = [](double a, double b) -> double {
+        return (a >= b) ? a : b;
+    };
+    auto abs = [&max](double x) -> double {
+        return max(x, -x);
+    };
     if (a.size() != b.size()) {
         return false;
     }
     for (int i=0; i<a.size(); i++) {
-        double diff = a[i] - b[i];
-        diff = (diff >= 0) ? diff : -diff;
+        if (a[i] == b[i]) {
+            continue;
+        }
+        double diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
         if (diff > eps) {
+            std::cout << diff << std::endl;
             return false;
         }
     }
