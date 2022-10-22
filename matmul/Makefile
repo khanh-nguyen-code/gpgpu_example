@@ -1,3 +1,10 @@
+bench: clean
+	g++ \
+		-std=c++17 -fPIC -O3 \
+		-I . -I ../include \
+		-l OpenCL -l clblast -fopenmp\
+		bench.cpp -o bench.out
+	./bench.out
 run: clean
 	g++ \
 		-std=c++17 -fPIC -O3 \
@@ -6,4 +13,4 @@ run: clean
 		main.cpp -o main.out
 	./main.out
 clean:
-	rm -f main.out
+	rm -f *.out
