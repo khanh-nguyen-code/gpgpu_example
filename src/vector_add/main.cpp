@@ -76,15 +76,12 @@ int main() {
     code = clSetKernelArg(kernel, 3, sizeof(cl_mem), &b_buf);
     cl_util::assert("set_kernel_arg", code);
 
+    std::vector<size_t> global_work_offset = {0};
     std::vector<size_t> global_work_size = {n};
     std::vector<size_t> local_work_size = {1};
-    if (global_work_size.size() != local_work_size.size()) {
-        std::printf("dim: %d %d\n", global_work_size.size(), local_work_size.size());
-        std::exit(1);
-    }
     size_t work_dim = global_work_size.size();
     code = clEnqueueNDRangeKernel(
-        queue, kernel, work_dim, nullptr,
+        queue, kernel, work_dim, global_work_offset.data(),
         global_work_size.data(), local_work_size.data(),
         write_event.size(), write_event.data(), &kernel_event
     );
