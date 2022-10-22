@@ -160,7 +160,7 @@ int main() {
     auto t4 = timer::now();
     if (vector_cmp(c, c_host)) {
         std::printf("result ok\n");
-        std::printf("cl time:\t%lld\n", (t2-t1));
+        std::printf("cl  time:\t%lld\n", (t2-t1));
         std::printf("omp time:\t%lld\n", (t4-t3));
     } else {
         std::printf("error\n");
