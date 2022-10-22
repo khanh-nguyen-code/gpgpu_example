@@ -1,6 +1,5 @@
 #include<iostream>
-#define CL_TARGET_OPENCL_VERSION 200
-#include<CL/cl.hpp>
+#include"cl_util.h"
 
 int main() {
     // list all platforms and devices
