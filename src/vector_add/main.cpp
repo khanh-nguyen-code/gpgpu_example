@@ -1,6 +1,6 @@
 #include<iostream>
 #include<vector>
-#include"kernel.cl.h"
+#include"kernel.h"
 #include"util.h"
 
 #define CL_TARGET_OPENCL_VERSION 200
@@ -58,7 +58,7 @@ int main() {
     cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, nullptr, &code);
     cl_util::assert("create_command_queue_with_properties", code);
     
-    const std::string source(reinterpret_cast<char*>(&kernel_cl[0]), kernel_cl_len);
+    const std::string source(reinterpret_cast<char*>(&kernel[0]), kernel_len);
     cl_kernel kernel = cl_util::create_kernel(context, source, "vector_add");
 
     cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(double), nullptr, &code);
