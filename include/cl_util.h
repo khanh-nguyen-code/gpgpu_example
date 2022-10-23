@@ -7,7 +7,7 @@
 #include<string>
 
 namespace cl_util {
-    void assert(const char* name, cl_int code) {
+    void code_ok(const char* name, cl_int code) {
         if (code != CL_SUCCESS) {
             std::printf("%s %d\n", name, code);
             std::exit(1);
@@ -22,7 +22,7 @@ namespace cl_util {
         std::vector<char> buffer(BUFFER_SIZE);
         size_t size;
         cl_int code = reader(BUFFER_SIZE, buffer.data(), &size);
-        assert(name, code);
+        code_ok(name, code);
         buffer.resize(size);
         buffer.push_back('\0');
         return std::string(buffer.data());
@@ -35,7 +35,7 @@ namespace cl_util {
     ) {
         std::vector<T> buffer(BUFFER_SIZE);
         cl_uint size;
-        assert(name, reader(BUFFER_SIZE, buffer.data(), &size));
+        code_ok(name, reader(BUFFER_SIZE, buffer.data(), &size));
         buffer.resize(size);
         return buffer;
     }
@@ -46,12 +46,12 @@ namespace cl_util {
         const char* source_c = source.c_str();
         size_t source_length = source.length();
         cl_program program = clCreateProgramWithSource(context, 1, &source_c, &source_length, &code);
-        assert("create_program_with_source", code);
+        code_ok("create_program_with_source", code);
         const char* options = "-Werror";
         code = clBuildProgram(program, 0, nullptr, options, nullptr, nullptr);
-        assert("build_program", code);
+        code_ok("build_program", code);
         cl_kernel kernel = clCreateKernel(program, name, &code);
-        assert("create_kernel", code);
+        code_ok("create_kernel", code);
         clReleaseProgram(program);
         return kernel;
     }
