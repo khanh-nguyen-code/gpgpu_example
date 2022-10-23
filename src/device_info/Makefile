@@ -3,7 +3,7 @@ run: clean
 		-std=c++17 -fPIC -O3\
 		-I ../../include \
 		-l OpenCL \
-		main.cpp -o main.out
-	./main.out
+		main.cpp -o run
+	./run
 clean:
-	rm -f main.out
+	rm -f run
