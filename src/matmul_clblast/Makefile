@@ -3,14 +3,14 @@ bench: clean
 		-std=c++17 -fPIC -O3 \
 		-I . -I ../../include \
 		-l OpenCL -l clblast -fopenmp\
-		bench.cpp -o bench.out
-	./bench.out
+		bench.cpp -o bench
+	./bench
 run: clean
 	g++ \
 		-std=c++17 -fPIC -O3 \
 		-I . -I ../../include \
 		-l OpenCL -l clblast -fopenmp\
-		main.cpp -o main.out
-	./main.out
+		main.cpp -o run 
+	./run
 clean:
-	rm -f *.out
+	rm -f run bench
