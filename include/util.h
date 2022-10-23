@@ -28,9 +28,10 @@ namespace util{
     void random_seed(T seed) {
         random_engine = std::default_random_engine(seed);
     }
-    std::vector<double> random_normal(int size) {
-        std::vector<double> vec(size);
-        std::normal_distribution<double> dist(0.0, 1.0);
+    template<typename T>
+    std::vector<T> random_normal(int size) {
+        std::vector<T> vec(size);
+        std::normal_distribution<T> dist(0.0, 1.0);
         for (int i=0; i<size; i++) {
             vec[i] = dist(random_engine);
         }

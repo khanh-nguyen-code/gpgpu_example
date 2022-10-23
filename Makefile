@@ -14,28 +14,42 @@ endif
 # $(wildcard src/*.cpp): get all .cpp files from current dir
 TRG_FILES = $(wildcard *.cpp)
 # $(patsubst %.cpp,%, $(TRG_FILES)): change all .cpp files in current dir into exec files
-TRG_EXECS = $(patsubst %.cpp,%, $(TRG_FILES))
+TRG_EXECS = $(patsubst %.cpp, %.out, $(TRG_FILES))
 # $(wildcard src/*.cpp): get all .cpp files from "src/"
 SRC_FILES = $(wildcard src/*.cpp)
 # $(patsubst src/%.cpp,obj/%.o,$(SRC_FILES)): change all .cpp files in "src/" into "obj/.o"
-OBJ_FILES = $(patsubst src/%.cpp,obj/%.o,$(SRC_FILES))
+OBJ_FILES = $(patsubst src/%.cpp, obj/%.o, $(SRC_FILES))
 
-build: dir $(LIBRARY_FILE) $(TRG_EXECS)
+KNL_FILES = $(wildcard src/kernel/*.cl)
+KNL_HDRS = $(patsubst src/kernel/%.cl, src/kernel/%.cl.h, $(KNL_FILES))
+
+
+build: dir $(KNL_HDRS) $(LIBRARY_FILE) $(TRG_EXECS)
 	echo "done"
 
-%: %.cpp
+dir:
+	mkdir -p lib obj include/kernel
+
+%.out: %.cpp
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -l $(LIBRARY)
 
-$(LIBRARY_FILE): dir $(OBJ_FILES)
+src/kernel/%.cl.h: src/kernel/%.cl
+	rm -f $@
+	touch $@
+	echo "#ifndef __$(patsubst src/kernel/%.cl.h,%, $@)__"  >> $@
+	echo "#define __$(patsubst src/kernel/%.cl.h,%, $@)__"  >> $@
+	xxd -i $< >> $@
+	echo "#endif // __$(patsubst src/kernel/%.cl.h,%, $@)__"  >> $@
+
+
+$(LIBRARY_FILE): $(OBJ_FILES)
 	$(CC) $(CFLAGS) -shared -o $(LIBRARY_FILE) $(OBJ_FILES) $(LDFLAGS)
 
-dir:
-	mkdir -p lib obj
 
 obj/%.o: src/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -rf $(TRG_EXECS) lib obj
+	rm -rf $(TRG_EXECS) $(KNL_HDRS) lib obj
 	
 .PHONY: build dir clean
