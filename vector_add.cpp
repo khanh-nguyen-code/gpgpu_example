@@ -4,7 +4,7 @@
 #include"util.h"
 
 #define CL_TARGET_OPENCL_VERSION 120 
-#include"cl_util.h"
+#include"cl_util/cl_util.h"
 
 
 cl_int code;
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     cl_command_queue queue = clCreateCommandQueue(context, device, 0, &code);
     cl_util::code_ok("create_command_queue", code);
     
-    const std::string source(reinterpret_cast<const char*>(&kernel_vector_add_cl[0]), kernel_vector_add_cl_len);
+    const std::string source(reinterpret_cast<const char*>(&vector_add_cl[0]), vector_add_cl_len);
     cl_kernel kernel = cl_util::create_kernel(context, source, "vector_add");
 
     cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(float), nullptr, &code);

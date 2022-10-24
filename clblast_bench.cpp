@@ -5,7 +5,7 @@
 #include"timer.h"
 
 #define CL_TARGET_OPENCL_VERSION 120 
-#include"cl_util.h"
+#include"cl_util/cl_util.h"
 #include<clblast.h>
 
 

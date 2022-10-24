@@ -2,7 +2,7 @@
 #include<cstdio>
 
 #define CL_TARGET_OPENCL_VERSION 300
-#include"cl_util.h"
+#include"cl_util/cl_util.h"
 
 int main(int argc, char** argv) {
     std::vector<cl_platform_id> platform_list = cl_util::read_list<cl_platform_id>([&](cl_uint size, cl_platform_id* buffer, cl_uint* size_ret) -> cl_int {
