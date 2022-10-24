@@ -4,12 +4,27 @@
 
 - PoCL - Portable Computing Language - open source implementation on CPU
 
-```commandline
+```shell
+# fedora dnf
 sudo dnf install pocl
+# arch linux pacman
+sudo pacman -S pocl
+# macos homebrew
+brew install pocl
 ```
 
 - Rocm - AMD implementation
 
-```commandline
+```shell
+# fedora dnf
 sudo dnf install rocmclinfo rocm-*
+# arch linux paru
+paru -S opencl-amd # https://wiki.archlinux.org/title/GPGPU#AMD/ATI
 ```
+
+- Apple - Xcode Command Line Tools
+```shell
+xcode-select --install
+```
+
+OpenCL implementation will be located at `/System/Library/Frameworks/OpenCL.framework`
