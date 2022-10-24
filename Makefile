@@ -1,7 +1,7 @@
 CC = cc
 
-CFLAGS = -Wall -g -std=c++17 -fPIC -I . -I include -L lib
-LDFLAGS = -l stdc++ -l clblast
+CFLAGS = -Wall -g -std=c++17 -fPIC -I . -I include -L lib `pkg-config --cflags clblast`
+LDFLAGS = -l stdc++ `pkg-config --libs clblast`
 LIBRARY = OpenclExample
 
 LIBRARY_FILE = lib/lib$(LIBRARY).so
