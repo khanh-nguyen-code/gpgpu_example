@@ -16,7 +16,7 @@ cl_int code;
 const int m = 4096;
 const int n = 4096;
 const int k = 4096;
-const float eps = 0.3;
+
 
 
 void matmul_clblast(
@@ -40,27 +40,6 @@ void matmul_clblast(
         std::printf("clblast_gemm: %d\n", code);
         std::exit(1);
     }
-}
-
-template<typename T>
-bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
-    auto max = [](T a, T b) -> T {
-        return (a >= b) ? a : b;
-    };
-    auto abs = [&max](T x) -> T {
-        return max(x, -x);
-    };
-    if (a.size() != b.size()) {
-        return false;
-    }
-    for (size_t i=0; i<a.size(); i++) {
-        T diff = abs(a[i] - b[i]);
-        if (diff > eps) {
-            std::cout << diff << std::endl;
-            return false;
-        }
-    }
-    return true;
 }
 
 template<typename T>
@@ -132,13 +111,8 @@ int main() {
     auto t3 = timer::now();
     matmul(c_host.data(), a.data(), b.data(), m, n, k);
     auto t4 = timer::now();
-    if (vector_cmp(c, c_host)) {
-        std::printf("result ok\n");
-        std::printf("cl  time:\t%ld\n", (t2-t1));
-        std::printf("omp time:\t%ld\n", (t4-t3));
-    } else {
-        std::printf("error\n");
-    }
+    std::printf("cl  time:\t%ld\n", (t2-t1));
+    std::printf("omp time:\t%ld\n", (t4-t3));
 
     // clean up
     clReleaseMemObject(a_buf);

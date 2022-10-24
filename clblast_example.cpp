@@ -15,7 +15,6 @@ cl_int code;
 const int m = 1024;
 const int n = 1024;
 const int k = 1024;
-const double eps = 0.3;
 
 
 void matmul_clblast(
@@ -42,7 +41,7 @@ void matmul_clblast(
 }
 
 template<typename T>
-bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
+T vector_diff(const std::vector<T>& a, const std::vector<T>& b) {
     auto max = [](T a, T b) -> T {
         return (a >= b) ? a : b;
     };
@@ -50,19 +49,16 @@ bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
         return max(x, -x);
     };
     if (a.size() != b.size()) {
-        return false;
+        return std::numeric_limits<T>::infinity();
     }
+    T max_diff = 0;
     for (size_t i=0; i<a.size(); i++) {
-        if (a[i] == b[i]) {
-            continue;
-        }
-        T diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
-        if (diff > eps) {
-            std::cout << diff << std::endl;
-            return false;
+        T diff = abs(a[i] - b[i]);
+        if (diff > max_diff) {
+            max_diff = diff;
         }
     }
-    return true;
+    return max_diff;
 }
 
 template<typename T>
@@ -125,11 +121,7 @@ int main() {
     // compare
     std::vector<float> c_host(c.size());
     matmul<float>(c_host.data(), a.data(), b.data(), m, n, k);
-    if (vector_cmp(c, c_host)) {
-        std::printf("result ok\n");
-    } else {
-        std::printf("error\n");
-    }
+    std::printf("max_diff %f\n", vector_diff<float>(c, c_host));
 
     // clean up
     clReleaseMemObject(a_buf);

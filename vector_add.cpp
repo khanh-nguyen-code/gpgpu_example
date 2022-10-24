@@ -11,7 +11,6 @@ const int device_id = 0;
 
 cl_int code;
 const uint64_t n = 1024;
-const float eps = 1e-6;
 
 template<typename T>
 std::vector<T> vector_add(const std::vector<T>& a, const std::vector<T>& b) {
@@ -25,7 +24,7 @@ std::vector<T> vector_add(const std::vector<T>& a, const std::vector<T>& b) {
     return c;
 }
 template<typename T>
-bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
+T vector_diff(const std::vector<T>& a, const std::vector<T>& b) {
     auto max = [](T a, T b) -> T {
         return (a >= b) ? a : b;
     };
@@ -33,19 +32,16 @@ bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
         return max(x, -x);
     };
     if (a.size() != b.size()) {
-        return false;
+        return std::numeric_limits<T>::infinity();
     }
+    T max_diff = 0;
     for (size_t i=0; i<a.size(); i++) {
-        if (a[i] == b[i]) {
-            continue;
-        }
-        T diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
-        if (diff > eps) {
-            std::cout << diff << std::endl;
-            return false;
+        T diff = abs(a[i] - b[i]);
+        if (diff > max_diff) {
+            max_diff = diff;
         }
     }
-    return true;
+    return max_diff;
 }
 
 int main() {
@@ -112,11 +108,7 @@ int main() {
     clReleaseEvent(read_event); 
     // compare
     std::vector<float> c_host = vector_add(a, b);
-    if (vector_cmp(c, c_host)) {
-        std::printf("result ok\n");
-    } else {
-        std::printf("error\n");
-    }
+    std::printf("max_diff %f\n", vector_diff<float>(c, c_host));
 
     // clean up
     clReleaseMemObject(a_buf);
