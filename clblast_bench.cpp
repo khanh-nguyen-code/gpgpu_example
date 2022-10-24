@@ -13,9 +13,9 @@ const int device_id = 0;
 
 cl_int code;
 // (m x k) (k x n) -> (m x n)
-const int m = 4096;
-const int n = 4096;
-const int k = 4096;
+const int m = 2048;
+const int n = 2048;
+const int k = 2048;
 
 
 
