@@ -53,7 +53,7 @@ bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
     if (a.size() != b.size()) {
         return false;
     }
-    for (int i=0; i<a.size(); i++) {
+    for (size_t i=0; i<a.size(); i++) {
         T diff = abs(a[i] - b[i]);
         if (diff > eps) {
             std::cout << diff << std::endl;
@@ -134,8 +134,8 @@ int main() {
     auto t4 = timer::now();
     if (vector_cmp(c, c_host)) {
         std::printf("result ok\n");
-        std::printf("cl  time:\t%lld\n", (t2-t1));
-        std::printf("omp time:\t%lld\n", (t4-t3));
+        std::printf("cl  time:\t%ld\n", (t2-t1));
+        std::printf("omp time:\t%ld\n", (t4-t3));
     } else {
         std::printf("error\n");
     }
