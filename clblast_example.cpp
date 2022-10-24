@@ -11,9 +11,9 @@
 
 cl_int code;
 // (m x k) (k x n) -> (m x n)
-const int m = 1024;
-const int n = 1024;
-const int k = 1024;
+const int m = 512;
+const int n = 512;
+const int k = 512;
 
 
 void matmul_clblast(
