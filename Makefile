@@ -9,7 +9,7 @@ LIBRARY_FILE = lib/lib$(LIBRARY).so
 UNAME = $(shell uname)
 
 ifeq ($(UNAME), Linux)
-LDFLAGS += -l OpenCL -fopenmp
+LDFLAGS += -l OpenCL -fopenmp -lm
 endif
 ifeq ($(UNAME), Darwin)
 CFLAGS += -I /opt/homebrew/include/ -I/opt/homebrew/opt/libomp/include -L /opt/homebrew/lib -L/opt/homebrew/opt/libomp/lib
