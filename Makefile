@@ -1,13 +1,13 @@
+# declaration
 CC = cc
-
 CFLAGS = -Wall -g -std=c++17 -fPIC -I . -I include -L lib `pkg-config --cflags clblast`
 LDFLAGS = -l stdc++ `pkg-config --libs clblast`
 LIBRARY = OpenclExample
 
-LIBRARY_FILE = lib/lib$(LIBRARY).so
+# generated
+LIBRARY_OUT = lib/lib$(LIBRARY).so
 
 UNAME = $(shell uname)
-
 ifeq ($(UNAME), Linux)
 LDFLAGS += -l OpenCL -fopenmp -lm
 endif
@@ -16,45 +16,51 @@ CFLAGS += -I /opt/homebrew/include/ -I/opt/homebrew/opt/libomp/include -L /opt/h
 LDFLAGS += -framework OpenCL -l omp
 endif
 
-# $(wildcard src/*.cpp): get all .cpp files from current dir
-TRG_FILES = $(wildcard *.cpp)
-# $(patsubst %.cpp,%, $(TRG_FILES)): change all .cpp files in current dir into exec files
-TRG_EXECS = $(patsubst %.cpp, %.out, $(TRG_FILES))
-# $(wildcard src/*.cpp): get all .cpp files from "src/"
-SRC_FILES = $(wildcard src/*.cpp)
-# $(patsubst src/%.cpp,obj/%.o,$(SRC_FILES)): change all .cpp files in "src/" into "obj/.o"
-OBJ_FILES = $(patsubst src/%.cpp, obj/%.o, $(SRC_FILES))
+TARGET_SRC = $(wildcard *.cpp)
+TARGET_OUT = $(patsubst %.cpp,%.out,$(TARGET_SRC))
 
-KNL_FILES = $(wildcard src/kernel/*.cl)
-KNL_HDRS = $(patsubst src/kernel/%.cl, src/kernel/%.cl.h, $(KNL_FILES))
+OBJECT_SRC = $(wildcard src/*.cpp)
+OBJECT_OUT = $(patsubst src/%.cpp,obj/%.o,$(OBJECT_SRC))
 
+KERNEL_SRC = $(wildcard kernel/*.cl)
+KERNEL_OUT = $(patsubst kernel/%.cl,kernel/%.cl.h,$(KERNEL_SRC))
 
-build: dir $(KNL_HDRS) $(LIBRARY_FILE) $(TRG_EXECS)
-	echo "done"
+.PHONY: target directory kernel library clean
 
-dir:
-	mkdir -p lib obj include/kernel
+# target
+target: directory kernel library $(TARGET_OUT)
+	@echo "TARGET DONE"	
 
 %.out: %.cpp
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS) -l $(LIBRARY)
 
-src/kernel/%.cl.h: src/kernel/%.cl
-	rm -f $@
-	touch $@
-	echo "#ifndef __$(patsubst src/kernel/%.cl.h,%, $@)__"  >> $@
-	echo "#define __$(patsubst src/kernel/%.cl.h,%, $@)__"  >> $@
+# directory
+directory:
+	mkdir -p obj lib
+	@echo "DIRECTORY DONE"
+
+# kernel
+kernel: $(KERNEL_OUT)
+	@echo "KERNEL DONE"
+
+kernel/%.cl.h: kernel/%.cl
+	cat /dev/null > $@
+	echo "#ifndef __$(patsubst kernel/%.cl,%,$<)__" >> $@
+	echo "#define __$(patsubst kernel/%.cl,%,$<)__" >> $@
 	xxd -i $< >> $@
-	echo "#endif // __$(patsubst src/kernel/%.cl.h,%, $@)__"  >> $@
+	echo "#endif//__$(patsubst kernel/%.cl,%,$<)__" >> $@
 
+# library
+library: $(LIBRARY_OUT)
+	@echo "LIBRARY DONE"
 
-$(LIBRARY_FILE): $(OBJ_FILES)
-	$(CC) $(CFLAGS) -shared -o $(LIBRARY_FILE) $(OBJ_FILES) $(LDFLAGS)
-
+$(LIBRARY_OUT): $(OBJECT_OUT)
+	$(CC) $(CFLAGS) -shared -o $(LIBRARY_OUT) $(OBJECT_OUT) $(LDFLAGS)
 
 obj/%.o: src/%.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+
+# clean
 clean:
-	rm -rf $(TRG_EXECS) $(KNL_HDRS) lib obj
-	
-.PHONY: build dir clean
+	rm -rf $(KERNEL_OUT) $(LIBRARY_OUT) $(TARGET_OUT) obj lib *.dSYM
