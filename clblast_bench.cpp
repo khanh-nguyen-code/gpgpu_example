@@ -13,10 +13,10 @@ const int device_id = 0;
 
 cl_int code;
 // (m x k) (k x n) -> (m x n)
-const int m = 2048;
-const int n = 2048;
-const int k = 2048;
-const float eps = 1e-6;
+const int m = 1024;
+const int n = 1024;
+const int k = 1024;
+const float eps = 0.3;
 
 
 void matmul_clblast(

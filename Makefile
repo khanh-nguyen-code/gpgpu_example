@@ -2,11 +2,12 @@ CC = cc
 
 CFLAGS = -Wall -g -std=c++17 -fPIC -I . -I include -L lib
 LDFLAGS = -l stdc++ -l clblast
-LIBRARY = Renderer
+LIBRARY = OpenclExample
 
 LIBRARY_FILE = lib/lib$(LIBRARY).so
 
 UNAME = $(shell uname)
+
 ifeq ($(UNAME), Darwin)
 CFLAGS += -I /opt/homebrew/include/ -I/opt/homebrew/opt/libomp/include -L /opt/homebrew/lib -L/opt/homebrew/opt/libomp/lib
 LDFLAGS += -framework OpenCL -l omp
