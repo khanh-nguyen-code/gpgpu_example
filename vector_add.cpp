@@ -53,7 +53,7 @@ int main() {
     cl_device_id device = cl_util::get_device(platform_id, device_id);
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &code);
     cl_util::code_ok("create_context", code);
-    cl_command_queue queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE | 0, &code);
+    cl_command_queue queue = clCreateCommandQueue(context, device, 0, &code);
     cl_util::code_ok("create_command_queue", code);
     
     const std::string source(reinterpret_cast<const char*>(&src_kernel_vector_add_cl[0]), src_kernel_vector_add_cl_len);

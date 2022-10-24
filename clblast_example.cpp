@@ -85,7 +85,7 @@ int main() {
     cl_device_id device = cl_util::get_device(platform_id, device_id);
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &code);
     cl_util::code_ok("create_context", code);
-    cl_command_queue queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE | 0, &code);
+    cl_command_queue queue = clCreateCommandQueue(context, device, 0, &code);
     cl_util::code_ok("create_command_queue_with_properties", code);
     
     cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(double), nullptr, &code);
