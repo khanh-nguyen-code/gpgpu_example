@@ -13,9 +13,9 @@ const int device_id = 0;
 
 cl_int code;
 // (m x k) (k x n) -> (m x n)
-const int m = 1024;
-const int n = 1024;
-const int k = 1024;
+const int m = 4096;
+const int n = 4096;
+const int k = 4096;
 const float eps = 0.3;
 
 
@@ -54,10 +54,7 @@ bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
         return false;
     }
     for (int i=0; i<a.size(); i++) {
-        if (a[i] == b[i]) {
-            continue;
-        }
-        T diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
+        T diff = abs(a[i] - b[i]);
         if (diff > eps) {
             std::cout << diff << std::endl;
             return false;
