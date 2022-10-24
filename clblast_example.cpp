@@ -6,8 +6,7 @@
 #define CL_TARGET_OPENCL_VERSION 120 
 #include"cl_util.h"
 #include<clblast.h>
-const int platform_id = 0;
-const int device_id = 0;
+
 
 
 cl_int code;
@@ -76,7 +75,13 @@ void matmul(T* c, const T* a, const T* b, int m, int n, int k) {
 }
 
 
-int main() {
+int main(int argc, char** argv) {
+    int platform_id = 0;
+    int device_id = 0;
+    if (argc >= 3) {
+        platform_id = std::atoi(argv[1]);
+        device_id = std::atoi(argv[2]);
+    }
     util::random_seed(1234);
     std::vector<float> a = util::random_normal<float>(m * k);
     std::vector<float> b = util::random_normal<float>(k * n);

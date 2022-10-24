@@ -5,8 +5,6 @@
 
 #define CL_TARGET_OPENCL_VERSION 120 
 #include"cl_util.h"
-const int platform_id = 0;
-const int device_id = 0;
 
 
 cl_int code;
@@ -44,7 +42,15 @@ T vector_diff(const std::vector<T>& a, const std::vector<T>& b) {
     return max_diff;
 }
 
-int main() {
+int main(int argc, char** argv) {
+    int platform_id = 0;
+    int device_id = 0;
+    if (argc >= 3) {
+        platform_id = std::atoi(argv[1]);
+        device_id = std::atoi(argv[2]);
+    }
+
+
     util::random_seed(1234);
     std::vector<float> a = util::random_normal<float>(n);
     std::vector<float> b = util::random_normal<float>(n);
