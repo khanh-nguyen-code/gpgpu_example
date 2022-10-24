@@ -42,20 +42,6 @@ void matmul_clblast(
     }
 }
 
-template<typename T>
-void matmul(T* c, const T* a, const T* b, int m, int n, int k) {
-    int m_i, n_i;
-    # pragma omp parallel for shared(a, b, c) private(m_i, n_i) collapse(2)
-    for (m_i=0; m_i < m; m_i++)
-    for (n_i=0; n_i < n; n_i++) {
-        T acc = 0;
-        for (int k_i=0; k_i < k; k_i++) {
-            acc += a[m_i * k + k_i] * b[k_i * n + n_i];
-        }
-        c[m_i * n + n_i] = acc;
-    }
-}
-
 int main() {
     util::random_seed(1234);
     std::vector<float> a = util::random_normal<float>(m * k);
@@ -106,13 +92,7 @@ int main() {
     }
     clReleaseEvent(kernel_event);
     clReleaseEvent(read_event); 
-    // compare
-    std::vector<float> c_host(c.size());
-    auto t3 = timer::now();
-    matmul(c_host.data(), a.data(), b.data(), m, n, k);
-    auto t4 = timer::now();
     std::printf("cl  time:\t%ld\n", (t2-t1));
-    std::printf("omp time:\t%ld\n", (t4-t3));
 
     // clean up
     clReleaseMemObject(a_buf);
