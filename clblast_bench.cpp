@@ -2,9 +2,9 @@
 #include<vector>
 #include<omp.h>
 #include"util.h"
-#include"high_precision_timer.h"
+#include"timer.h"
 
-#define CL_TARGET_OPENCL_VERSION 200
+#define CL_TARGET_OPENCL_VERSION 120 
 #include"cl_util.h"
 #include<clblast.h>
 const int platform_id = 0;
@@ -16,7 +16,7 @@ cl_int code;
 const int m = 2048;
 const int n = 2048;
 const int k = 2048;
-const double eps = 1e-6;
+const float eps = 1e-6;
 
 
 void matmul_clblast(
@@ -24,9 +24,9 @@ void matmul_clblast(
     cl_command_queue* queue, cl_event* event
 ) {
     // c <- alpha A B + beta C
-    double alpha = 1.0;
-    double beta = 0.0;
-    clblast::StatusCode code = clblast::Gemm<double>(
+    float alpha = 1.0;
+    float beta = 0.0;
+    clblast::StatusCode code = clblast::Gemm<float>(
         clblast::Layout::kRowMajor, clblast::Transpose::kNo, clblast::Transpose::kNo,
         m, n, k, 
         alpha,
@@ -42,11 +42,12 @@ void matmul_clblast(
     }
 }
 
-bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
-    auto max = [](double a, double b) -> double {
+template<typename T>
+bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
+    auto max = [](T a, T b) -> T {
         return (a >= b) ? a : b;
     };
-    auto abs = [&max](double x) -> double {
+    auto abs = [&max](T x) -> T {
         return max(x, -x);
     };
     if (a.size() != b.size()) {
@@ -56,7 +57,7 @@ bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
         if (a[i] == b[i]) {
             continue;
         }
-        double diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
+        T diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
         if (diff > eps) {
             std::cout << diff << std::endl;
             return false;
@@ -65,12 +66,13 @@ bool vector_cmp(const std::vector<double>& a, const std::vector<double>& b) {
     return true;
 }
 
-void matmul(double* c, const double *a, const double* b, int m, int n, int k) {
+template<typename T>
+void matmul(T* c, const T* a, const T* b, int m, int n, int k) {
     int m_i, n_i;
     # pragma omp parallel for shared(a, b, c) private(m_i, n_i) collapse(2)
     for (m_i=0; m_i < m; m_i++)
     for (n_i=0; n_i < n; n_i++) {
-        double acc = 0;
+        T acc = 0;
         for (int k_i=0; k_i < k; k_i++) {
             acc += a[m_i * k + k_i] * b[k_i * n + n_i];
         }
@@ -78,34 +80,33 @@ void matmul(double* c, const double *a, const double* b, int m, int n, int k) {
     }
 }
 
-
 int main() {
     util::random_seed(1234);
-    std::vector<double> a = util::random_normal(m * k);
-    std::vector<double> b = util::random_normal(k * n);
-    std::vector<double> c(m * n);
+    std::vector<float> a = util::random_normal<float>(m * k);
+    std::vector<float> b = util::random_normal<float>(k * n);
+    std::vector<float> c(m * n);
 
     cl_device_id device = cl_util::get_device(platform_id, device_id);
     cl_context context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &code);
-    cl_util::assert("create_context", code);
-    cl_command_queue queue = clCreateCommandQueueWithProperties(context, device, nullptr, &code);
-    cl_util::assert("create_command_queue_with_properties", code);
+    cl_util::code_ok("create_context", code);
+    cl_command_queue queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE | 0, &code);
+    cl_util::code_ok("create_command_queue_with_properties", code);
     
-    cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(double), nullptr, &code);
-    cl_util::assert("create_buffer_with_properties", code);
-    cl_mem b_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, b.size() * sizeof(double), nullptr, &code);
-    cl_util::assert("create_buffer_with_properties", code);
-    cl_mem c_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, c.size() * sizeof(double), nullptr, &code);
-    cl_util::assert("create_buffer_with_properties", code);
+    cl_mem a_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, a.size() * sizeof(float), nullptr, &code);
+    cl_util::code_ok("create_buffer_with_properties", code);
+    cl_mem b_buf = clCreateBuffer(context, CL_MEM_READ_ONLY, b.size() * sizeof(float), nullptr, &code);
+    cl_util::code_ok("create_buffer_with_properties", code);
+    cl_mem c_buf = clCreateBuffer(context, CL_MEM_WRITE_ONLY, c.size() * sizeof(float), nullptr, &code);
+    cl_util::code_ok("create_buffer_with_properties", code);
     
     // queue
     std::vector<cl_event> write_event(2);
-    code = clEnqueueWriteBuffer(queue, a_buf, CL_NON_BLOCKING, 0, a.size() * sizeof(double), a.data(), 0, nullptr, &write_event[0]);
-    cl_util::assert("enqueue_write_buffer", code);
-    code = clEnqueueWriteBuffer(queue, b_buf, CL_NON_BLOCKING, 0, b.size() * sizeof(double), b.data(), 0, nullptr, &write_event[1]);
-    cl_util::assert("enqueue_write_buffer", code);
+    code = clEnqueueWriteBuffer(queue, a_buf, CL_NON_BLOCKING, 0, a.size() * sizeof(float), a.data(), 0, nullptr, &write_event[0]);
+    cl_util::code_ok("enqueue_write_buffer", code);
+    code = clEnqueueWriteBuffer(queue, b_buf, CL_NON_BLOCKING, 0, b.size() * sizeof(float), b.data(), 0, nullptr, &write_event[1]);
+    cl_util::code_ok("enqueue_write_buffer", code);
     code = clWaitForEvents(write_event.size(), write_event.data());
-    cl_util::assert("wait_for_events", code);
+    cl_util::code_ok("wait_for_events", code);
 
     auto t1 = timer::now();
     
@@ -113,15 +114,15 @@ int main() {
     matmul_clblast(c_buf, a_buf, b_buf, m, n, k, &queue, &kernel_event);
 
     code = clWaitForEvents(1, &kernel_event);
-    cl_util::assert("wait_for_events", code);
+    cl_util::code_ok("wait_for_events", code);
     auto t2 = timer::now();
     
     cl_event read_event;
-    code = clEnqueueReadBuffer(queue, c_buf, CL_NON_BLOCKING, 0, c.size() * sizeof(double), c.data(), 1, &kernel_event, &read_event);
-    cl_util::assert("enqueue_read_buffer", code);
+    code = clEnqueueReadBuffer(queue, c_buf, CL_NON_BLOCKING, 0, c.size() * sizeof(float), c.data(), 1, &kernel_event, &read_event);
+    cl_util::code_ok("enqueue_read_buffer", code);
 
     code = clWaitForEvents(1, &read_event);
-    cl_util::assert("wait_for_events", code);
+    cl_util::code_ok("wait_for_events", code);
     
     clFinish(queue);
     for (auto& event: write_event) {
@@ -130,7 +131,7 @@ int main() {
     clReleaseEvent(kernel_event);
     clReleaseEvent(read_event); 
     // compare
-    std::vector<double> c_host(c.size());
+    std::vector<float> c_host(c.size());
     auto t3 = timer::now();
     matmul(c_host.data(), a.data(), b.data(), m, n, k);
     auto t4 = timer::now();
