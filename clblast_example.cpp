@@ -52,8 +52,11 @@ bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
     if (a.size() != b.size()) {
         return false;
     }
-    for (int i=0; i<a.size(); i++) {
-        T diff = abs(a[i] - b[i]);
+    for (size_t i=0; i<a.size(); i++) {
+        if (a[i] == b[i]) {
+            continue;
+        }
+        T diff = abs(a[i] - b[i]) / max(abs(a[i]), abs(b[i]));
         if (diff > eps) {
             std::cout << diff << std::endl;
             return false;

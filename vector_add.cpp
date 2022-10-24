@@ -16,7 +16,7 @@ const float eps = 1e-6;
 template<typename T>
 std::vector<T> vector_add(const std::vector<T>& a, const std::vector<T>& b) {
     std::vector<T> c;
-    for (int i=0;; i++) {
+    for (size_t i=0;; i++) {
         if (i >= a.size() or i >= b.size()) {
             break;
         }
@@ -35,7 +35,7 @@ bool vector_cmp(const std::vector<T>& a, const std::vector<T>& b) {
     if (a.size() != b.size()) {
         return false;
     }
-    for (int i=0; i<a.size(); i++) {
+    for (size_t i=0; i<a.size(); i++) {
         if (a[i] == b[i]) {
             continue;
         }
