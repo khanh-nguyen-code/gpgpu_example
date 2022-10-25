@@ -7,39 +7,39 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-# include directories
-include_directories(
-    "include"
-    "/opt/homebrew/include"
-    "/opt/homebrew/opt/libomp/include"
-)
-# vendor library directories
-link_directories(
-    "/opt/homebrew/lib"
-    "/opt/homebrew/opt/libomp/lib"
-)
+    # include directories
+    include_directories(
+        "include"
+        "/opt/homebrew/include"
+        "/opt/homebrew/opt/libomp/include"
+    )
+    # vendor library directories
+    link_directories(
+        "/opt/homebrew/lib"
+        "/opt/homebrew/opt/libomp/lib"
+    )
 
-# vendor: list of vendor packages to be linked with library and target
-set(vendor
-    "-framework OpenCL"
-    "omp"
-    "clblast"
-)
+    # vendor: list of vendor packages to be linked with library and target
+    set(vendor
+        "-framework OpenCL"
+        "omp"
+        "clblast"
+    )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-# include directories
-include_directories(
-    "include"
-)
-# vendor library directories
-link_directories(
-)
+    # include directories
+    include_directories(
+        "include"
+    )
+    # vendor library directories
+    link_directories(
+    )
 
-# vendor: list of vendor packages to be linked with library and target
-set(vendor
-    "OpenCL"
-    "-fopenmp"
-    "clblast"
-)
+    # vendor: list of vendor packages to be linked with library and target
+    set(vendor
+        "OpenCL"
+        "-fopenmp"
+        "clblast"
+    )
 else()
     message(FATAL_ERROR "does not support system: " ${CMAKE_SYSTEM_NAME})
 endif()
