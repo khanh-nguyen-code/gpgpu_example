@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.24)
 project("example")
 
+message(${CMAKE_SYSTEM_NAME})
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 # include directories
 include_directories(
     "include"
@@ -22,6 +25,25 @@ set(vendor
     "omp"
     "clblast"
 )
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+# include directories
+include_directories(
+    "include"
+)
+# vendor library directories
+link_directories(
+)
+
+# vendor: list of vendor packages to be linked with library and target
+set(vendor
+    "OpenCL"
+    "-fopenmp"
+    "clblast"
+)
+else()
+    message(FATAL_ERROR "does not support system: " ${CMAKE_SYSTEM_NAME})
+endif()
+
 
 # library_list: placeholder for all building libraries
 set(library_list)  
