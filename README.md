@@ -18,6 +18,13 @@ brew install pocl
 paru -S rocm-opencl-runtime # https://wiki.archlinux.org/title/GPGPU#AMD/ATI
 ```
 
+- Cuda - Nvidia proprietary implemenation
+
+```shell
+# arch linux pacman
+pacman -S opencl-nvidia
+```
+
 - Apple - Xcode Command Line Tools
 ```shell
 xcode-select --install
