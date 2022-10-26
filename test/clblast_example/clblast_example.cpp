@@ -3,7 +3,7 @@
 #include<omp.h>
 #include"util.h"
 
-#define CL_TARGET_OPENCL_VERSION 120 
+#define CL_TARGET_OPENCL_VERSION 300 
 #include"cl_util/cl_util.h"
 #include<clblast.h>
 
