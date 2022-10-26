@@ -25,6 +25,8 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     )
     # vendor: list of vendor packages to be linked with library and target
     set(vendor
+        "-framework OpenCL"
+        "clblast"
     )
 endif()
 
