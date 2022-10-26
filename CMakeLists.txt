@@ -40,6 +40,7 @@ if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set(vendor
         "OpenCL"
         "clblast"
+        "-fopenmp"
     )
 endif()
 
