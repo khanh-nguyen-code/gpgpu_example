@@ -4,6 +4,7 @@
 #include<iostream>
 #include<cuda_runtime_api.h>
 #include"vec_add_device/vec_add_device.h"
+#include"cuda_util/cuda_util.h"
 
 const int n = 1024;
 
@@ -60,18 +61,6 @@ T vec_diff(const std::vector<T>& a, const std::vector<T>& b) {
     return max_diff;
 }
 
-const cudaError_t cudaAssert(const cudaError_t err, const char* file, const int line, bool abort) {
-    if (err != cudaSuccess) {
-        std::cerr << file << ":" << line << " error: " << err << " " << cudaGetErrorString(err) << std::endl;
-        if (abort) {
-            cudaDeviceReset();
-            std::exit(1);
-        }
-    }
-    return err;
-}
-
-#define cudaOk(err, ...) cudaAssert(err, __FILE__, __LINE__, true);
 
 
 int main( int argc, char* argv[] ) {
