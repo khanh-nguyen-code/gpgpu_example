@@ -1,4 +1,4 @@
-#include<cstdint>
+#include"vec_add_device/vec_add_device.h"
 
 __global__ void vec_add_kernel(const uint64_t n, float *c, const float *a, const float *b) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;

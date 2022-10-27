@@ -3,7 +3,7 @@
 #include<vector>
 #include<iostream>
 #include<cuda_runtime_api.h>
-#include"vec_add_device.h"
+#include"vec_add_device/vec_add_device.h"
 
 const int n = 1024;
 
