@@ -4,8 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "include",
-                "/usr/include/c++/12.2.0"
+                "${workspaceFolder}/cuda/include",
+                "/opt/cuda/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",
