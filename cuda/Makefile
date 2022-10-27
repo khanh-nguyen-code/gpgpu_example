@@ -6,8 +6,8 @@ COMMON_CFLAGS = -g -std=c++17 -I include -L lib
 ifeq ($(UNAME), Linux)
 	# specific for Linux
 	CC = gcc
-	CFLAGS = $(COMMON_CFLAGS) -Wall -fPIC
-	LDFLAGS = -l stdc++ -I /opt/cuda/include -L /opt/cuda/lib64 -l cudart -l m
+	CFLAGS = $(COMMON_CFLAGS) -Wall -fPIC -I /opt/cuda/include -L /opt/cuda/lib64 
+	LDFLAGS = -l stdc++ -l cudart -l m
 	NVCC = nvcc
 	NVCCFLAGS += $(COMMON_CFLAGS) --compiler-options -fPIC
 endif
