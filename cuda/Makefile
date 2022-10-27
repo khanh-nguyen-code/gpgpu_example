@@ -6,10 +6,10 @@ COMMON_CFLAGS = -g -std=c++17 -I include -L lib
 ifeq ($(UNAME), Linux)
 	# specific for Linux
 	CC = gcc
-	CFLAGS = -Wall -fPIC $(COMMON_CFLAGS)
+	CFLAGS = $(COMMON_CFLAGS) -Wall -fPIC
 	LDFLAGS = -l stdc++ -I /opt/cuda/include -L /opt/cuda/lib64 -l cudart -l m
 	NVCC = nvcc
-	NVCCFLAGS += --compiler-options -fPIC $(COMMON_CFLAGS)
+	NVCCFLAGS += $(COMMON_CFLAGS) --compiler-options -fPIC
 endif
 ifeq ($(UNAME), Darwin)
 	# specific for MacOS
