@@ -60,12 +60,19 @@ T vec_diff(const std::vector<T>& a, const std::vector<T>& b) {
     return max_diff;
 }
 
-void cudaOk(cudaError_t err) {
+const cudaError_t cudaAssert(const cudaError_t err, const char* file, const int line, bool abort) {
     if (err != cudaSuccess) {
-        std::cerr << "error: " << err << std::endl;
-        std::exit(1);
+        std::cerr << file << ":" << line << " error: " << err << " " << cudaGetErrorString(err) << std::endl;
+        if (abort) {
+            cudaDeviceReset();
+            std::exit(1);
+        }
     }
+    return err;
 }
+
+#define cudaOk(err, ...) cudaAssert(err, __FILE__, __LINE__, true);
+
 
 int main( int argc, char* argv[] ) {
 
