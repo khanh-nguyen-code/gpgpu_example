@@ -49,51 +49,29 @@ T vec_diff(const size_t n, const T* a, const T* b) {
 
 
 
-
 int main( int argc, char* argv[] ) {
 
-    float* a = (float*)std::malloc(n * sizeof(float));
-    float* b = (float*)std::malloc(n * sizeof(float));
-    float* c = (float*)std::malloc(n * sizeof(float));
-    
+    float* a;
+    float* b;
+    float* c;
+
+    cudaOk(cudaMallocManaged((void**)&a, n * sizeof(float)));
+    cudaOk(cudaMallocManaged((void**)&b, n * sizeof(float)));
+    cudaOk(cudaMallocManaged((void**)&c, n * sizeof(float)));
+
     random_normal_inplace<float>(n, a);
     random_normal_inplace<float>(n, b);
 
-    float *d_a, *d_b, *d_c;
-    
-    cudaOk(cudaMalloc((void**)&d_a, n * sizeof(float)));
-    cudaOk(cudaMalloc((void**)&d_b, n * sizeof(float)));
-    cudaOk(cudaMalloc((void**)&d_c, n * sizeof(float)));
- 
     cudaStream_t stream;
     cudaOk(cudaStreamCreate(&stream));
-    
-    cudaOk(cudaMemcpyAsync(d_a, a, n * sizeof(float), cudaMemcpyHostToDevice, stream));
-    cudaOk(cudaMemcpyAsync(d_b, b, n * sizeof(float), cudaMemcpyHostToDevice, stream));
 
-    cudaEvent_t writeEvent;
-    cudaOk(cudaEventCreate(&writeEvent));
-    cudaOk(cudaEventRecord(writeEvent, stream));
-    cudaOk(cudaStreamWaitEvent(stream, writeEvent));
-    cudaOk(cudaEventDestroy(writeEvent));
+    vec_add_device(stream, n, c, a, b);
 
-    vec_add_device(stream, n, d_c, d_a, d_b);
-
-    cudaEvent_t kernelEvent;
-    cudaOk(cudaEventCreate(&kernelEvent));
-    cudaOk(cudaEventRecord(kernelEvent, stream));
-    cudaOk(cudaStreamWaitEvent(stream, kernelEvent));
-    cudaOk(cudaEventDestroy(kernelEvent));
-
-    cudaOk(cudaMemcpyAsync(c, d_c, n * sizeof(float), cudaMemcpyDeviceToHost, stream));
- 
     cudaOk(cudaStreamSynchronize(stream));
-
     cudaOk(cudaStreamDestroy(stream));
 
-    cudaOk(cudaFree(d_a));
-    cudaOk(cudaFree(d_b));
-    cudaOk(cudaFree(d_c));
+    cudaOk(cudaFree(a));
+    cudaOk(cudaFree(b));
 
     float* c_host = (float*)std::malloc(n * sizeof(float));
 
@@ -101,9 +79,7 @@ int main( int argc, char* argv[] ) {
  
     std::cout << "max diff: " << vec_diff(n, c, c_host) << std::endl;
 
-    std::free(a);
-    std::free(b);
-    std::free(c);
+    cudaOk(cudaFree(c));
     std::free(c_host);
     return 0;
 }
