@@ -11,9 +11,6 @@ ifeq ($(UNAME), Linux)
 	NVCC = nvcc
 	NVCCFLAGS += $(COMMON_CFLAGS) --compiler-options -fPIC
 endif
-ifeq ($(UNAME), Darwin)
-	# specific for MacOS
-endif
 
 # compile cuda object
 CUDA_OBJECT_SRC_LIST = $(shell find src -name "*.cu")
